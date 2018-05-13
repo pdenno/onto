@@ -18,12 +18,19 @@
     OWLObject
     OWLOntologyManager OWLOntology IRI
     OWLClassExpression OWLClass OWLAnnotation
+    OWLDataProperty OWLObjectProperty
+    OWLDataPropertyExpression ; not useful?
     OWLIndividual OWLDatatype
     OWLObjectPropertyExpression
     OWLNamedObject OWLOntologyID)
    [org.semanticweb.owlapi.search EntitySearcher]))
 
-(def diag (atom nil))
+;;; Meaning of some variables use in functions:
+;;;  obj - a OWLAPI object, one of OWLObject, OWLDataProperty, OWLObjectProperty
+;;;  tmap - a hash-map of information collected from obj through the thing-map function.
+
+
+(def ^:private diag (atom nil))
 
 (def +params+ (atom {:section-offset 1
                      :onto-namespace 'onto}))
@@ -51,52 +58,68 @@
   (repeatedly
    5
    (fn []           
-     (map #(owl/remove-ontology-maybe (OWLOntologyID. (owl/iri %))) ontologies))))
+     (doall (map #(owl/remove-ontology-maybe (OWLOntologyID. (owl/iri %))) ontologies)))))
 
 (defn simplify-tawny-annotations
   "Some are (:comment <pairs>). Some are (:annotation code-iri <pairs>)"
   [tawny-notes]
   (vec
-   (map #(let [original %]
-           (as-> original ?note
-               (cond (= (first ?note) :comment) (second ?note),
-                     (= (first ?note) :annotation ) (-> ?note rest rest first))
-               (apply hash-map ?note)
-               (assoc ?note :otype (first original))))
-        tawny-notes)))
+   (doall
+    (map #(let [original %]
+            (as-> original ?note
+              (cond (= (first ?note) :comment) (second ?note),
+                    (= (first ?note) :annotation ) (-> ?note rest rest first))
+              (apply hash-map ?note)
+              (assoc ?note :otype (first original))))
+         tawny-notes))))
 
-(defn short-name [node]
-  (->> node
+(defn short-name
+  "Argument is an OWLClassImpl etc."
+  [obj]
+  (->> obj
        look/named-entity-as-string
        (re-matches #".*\#(.*)")
        second))
 
+(defn properties-of
+  "Return a seq of properties that are relevant to the argument tmap."
+  [tmap property-map]
+  (let [sname (:short-name tmap)]
+     (filter (fn [pm] (or (some #(= sname %) (:domains pm))
+                          (some #(= sname %) (:ranges  pm))))
+             (vals property-map))))
+
+(defn thing-map
+  "Return a map of information about the class. See also query/into-map-with"
+  ([obj] (thing-map obj {})) ; Used by ignore? 
+  ([obj property-map]
+   (when (instance? OWLClass obj)
+     (let [sname (short-name obj)]
+       (as-> (apply hash-map (tawny.render/as-form obj :keyword true)) ?map
+         (assoc ?map :short-name sname) ; POD (or label)
+         (assoc ?map :var (intern (:onto-namespace @+params+) (symbol sname)))
+         (assoc ?map :notes (simplify-tawny-annotations (:annotation ?map)))
+         (assoc ?map :subclass-of (doall (map short-name ; POD there are other ways. See notes 2017-07-22. 
+                                              (filter #(instance? OWLClass %)
+                                                      (owl/direct-superclasses obj)))))
+         (assoc ?map :properties (properties-of ?map property-map)))))))
+
 (defn clojure-code
   "Return any http://modelmeth.nist.gov/modeling#clojureCode annotation"
-  [thing]
+  [obj]
   (some #(when (and (= (:otype %) :annotation)
                     (= (:type %) code-iri))
            (:literal %))
-        (-> thing thing-map :notes)))
+        (-> obj thing-map :notes)))
 
 ;;; POD needs to return true if a supertype is ignored. 
 (defn ignore?
   "Returns true if the tawny thing has a clojure {:priority :ignore}"
-  [thing]
-  (if (some #(= (owl/guess-type (owl/get-current-ontology) thing) %) tawny-types)
-    (when-let [code (clojure-code thing)]
+  [obj]
+  (if (some #(= (owl/guess-type (owl/get-current-ontology) obj) %) tawny-types)
+    (when-let [code (clojure-code obj)]
       (= :ignore (:priority (read-string code))))
     true))
-
-(defn thing-map
-  "Return a map of information about the class. See also query/into-map-with"
-  [thing]
-  (reset! diag thing)
-  (let [sname (short-name thing)]
-    (as-> (apply hash-map (tawny.render/as-form thing :keyword true)) ?map
-      (assoc ?map :short-name sname) ; POD (or label)
-      (assoc ?map :var (intern (:onto-namespace @+params+) (symbol sname)))
-      (assoc ?map :notes (simplify-tawny-annotations (:annotation ?map))))))
 
 (defn onto-parent-child-map
   "Define the parent/child relationship as a map."
@@ -143,7 +166,6 @@
    where every var leaf is followed by a vector representing its subclasses 
    (could be empty)."
   [nested-map]
-  (reset! diag nested-map)
   (clojure.walk/prewalk
    #(if (var? %)
       %
@@ -164,11 +186,11 @@
 ;;; because this is the place to calculate :depth.
 (defn latex-leaf-nodes
   "Return the onto vector structure with thing-maps replacing vars."
-  [onto-vec]
+  [onto-vec property-map]
   (loop [loc (-> onto-vec zip/vector-zip zip/down)]
     (as-> loc ?loc
       (if (var? (zip/node ?loc))
-        (zip/edit ?loc #(-> (thing-map (var-get %)) ; POD why dec below?
+        (zip/edit ?loc #(-> (thing-map (var-get %) property-map) ; POD why dec below?
                             (assoc :depth (dec (+ (:section-offset @+params+)
                                                   (zip-depth ?loc))))))
         ?loc)
@@ -186,24 +208,58 @@
     (= n 4) "\\subparagraph"
     :else ""))
 
-
-(defn comment [tmap]
+(defn entity-comment [tmap]
   (some #(when (= (:otype %) :comment) (:literal %))
         (:notes tmap)))
 
-(defn write-concepts [tmap-list]
-  (when tmap-list
-    (println "\n\\begin{description}")
-    (doall 
-     (map #(println (cl-format nil "   \\item[~A]: ~A"
-                               (:short-name %) (or (comment %) "+++Needs Definition+++")))
-          tmap-list))
-    (println "\\end{description}\n")))
-  
+;;; POD Needs work. Doesn't yet describe disjoint / disjoint exhaustive.
+(defn write-subclasses
+  "Write text describing subtyping relationships."
+  [tmap]
+  (let [sname (:short-name tmap)
+        stypes (:subclass-of tmap)]
+    (doall
+     (map #(println (cl-format nil "\\\\$ ~A \\sqsubseteq ~A$" %1 %2))
+          (repeat (count stypes) sname)
+          stypes))))
+
+;;; POD Should this just look at direct properties? 
+(defn write-properties
+  "Write text describing properties the class is involved in."
+  [tmap]
+  (let [sname (:short-name tmap)]
+    (doall
+     (map (fn [rel]
+            (if (some #(= sname %) (:domains rel))
+              (println (cl-format nil "\\\\$\\: ~A\\: \\textbf{~A}\\: ~{~A~^\\: \\vee~}\\: ~A$"
+                                  sname
+                                  (short-name (:obj rel))
+                                  (:ranges rel)
+                                  (:characteristics rel)))
+              (println (cl-format nil "\\\\$\\: ~{~A~^\\: \\vee~}\\: \\textbf{~A}\\: ~A\\:  ~A$"
+                                  (:domains rel)
+                                  (short-name (:obj rel))
+                                  sname
+                                  (:characteristics rel)))))
+          (:properties tmap)))
+    #_(println "\\\\")))
+
+(defn write-concept
+  "Write text about concept."
+  [tmap]
+  (let [sname (:short-name tmap)
+        comment (entity-comment tmap)]
+    (println (cl-format nil "\\\\\\\\   \\textbf{~A}\\\\Description: ~A\\\\"
+                        sname (or comment "+++Needs Definition+++")))
+    (write-subclasses tmap)
+    (write-properties tmap)))
+
 (defn write-section-heading
   [section]
-  (println (cl-format nil "~A{~A}" (subsub (:depth section)) (:short-name section)))
-  (println (cl-format nil " ~A" (or (comment section) "+++Needs Definition+++"))))
+  (println (cl-format nil "~A{~A}\\\\" (subsub (:depth section)) (:short-name section)))
+  (println (cl-format nil "Description: ~A\\\\" (or (entity-comment section) "+++Needs Definition+++")))
+  (write-subclasses section)
+  (write-properties section))
 
 ;;; POD Doesn't clojure have something like this?
 (defn by-n
@@ -216,7 +272,8 @@
       (recur (drop n s) (conj result (take n s))))))
 
 (defn partition-concepts
-  "Sort concepts (thing-maps) before branches. Argument is a loc that names a section"
+  "Argument is a loc that names a section. Return a map f associated nodes (thing-maps)
+   including the :section tmap, :direct-concepts thing-maps and :subsections thing-maps."
   [loc]
   (let [children (by-n 2 (-> loc zip/next zip/node))]
     {:section (-> loc zip/node)
@@ -237,14 +294,14 @@
               concepts (:direct-concepts parts)
               subsections (:subsections parts)]
           (when section (write-section-heading section))
-          (write-concepts concepts)
+          (doall (map write-concept concepts))
           (doall (map #(write-section! (-> % zip/vector-zip zip/down)) subsections)))))
 
 (defn latex-write-onto-nodes!
   "Write latex for the onto-root structure"
-  [v]
+  [v property-map]
   (-> v
-      latex-leaf-nodes
+      (latex-leaf-nodes property-map)
       zip/vector-zip
       zip/down
       write-section!))
@@ -262,6 +319,42 @@
              :namespace (create-ns 'onto) ; was onto.qudt
              :location (clojure.java.io/file "resources/SCHEMA_QUDT-v2.0.ttl")))
 
+(defn property-characteristics
+  "Return a vector containing keywords indicating which of the 7 OWL property
+   characteristics are true for the argument property."
+  [p ont]
+  (if (instance? OWLDataProperty p)
+    (cond-> []
+      (EntitySearcher/isFunctional p ont)        (conj :functional))
+    (cond-> []
+      (EntitySearcher/isTransitive p ont)        (conj :transitive)
+      (EntitySearcher/isFunctional p ont)        (conj :functional)
+      (EntitySearcher/isInverseFunctional p ont) (conj :inverse-functional)
+      (EntitySearcher/isSymmetric p ont)         (conj :symmetric)
+      (EntitySearcher/isAsymmetric p ont)        (conj :asymmetric)
+      (EntitySearcher/isIrreflexive p ont)       (conj :irreflexive)
+      (EntitySearcher/isReflexive p ont)         (conj :reflexive))))
+
+(defn property-analysis
+  "Return a map indexed by tawny vars. Entries are maps describing onto properties."
+  []
+  (let [o (owl/get-current-ontology)
+        prop-vars
+        (filter #(or (instance? OWLDataProperty (var-get %))
+                     (instance? OWLObjectProperty (var-get %)))
+                (vals (ns-interns (:onto-namespace @+params+))))]
+    (reduce (fn [prop-map var] ; Key var already exists. I use sname to find it. 
+              (let [obj (var-get var)]
+                (-> prop-map
+                    (assoc var {})
+                    (assoc-in [var :obj] obj)
+                    (assoc-in [var :var] var)
+                    (assoc-in [var :obj?] (instance? OWLObjectProperty obj))
+                    (assoc-in [var :domains] (map short-name (EntitySearcher/getDomains obj o)))
+                    (assoc-in [var :ranges]  (map short-name (EntitySearcher/getRanges  obj o)))
+                    (assoc-in [var :characteristics] (property-characteristics obj o)))))
+            {} prop-vars)))
+                    
 (defn latex-write-onto!
   [onto-file out-file uri-base & root-concepts] ; This interns vars, including root-concepts.
   (clear-ontos!)
@@ -271,19 +364,20 @@
              :location (clojure.java.io/file onto-file))
   (with-open [wrtr (writer out-file)]
     (binding [*out* wrtr]
-      (doall (map (fn [root-sym]
-                    (let [pc-map (onto-parent-child-map (var-get (resolve root-sym)))]
-                      (-> (onto-root-map {} [[(resolve root-sym)]] pc-map)
-                          vectify
-                          latex-write-onto-nodes!)))
-                  root-concepts)))))
+      (let [property-map (property-analysis)]
+        (doall (map (fn [root-sym]
+                      (let [pc-map (onto-parent-child-map (var-get (resolve root-sym)))]
+                        (-> (onto-root-map {} [[(resolve root-sym)]] pc-map) 
+                            vectify 
+                            (latex-write-onto-nodes! property-map))))
+                    root-concepts))))))
 
 (defn ops []
   (latex-write-onto!
    "resources/operations.ttl"
    "/Users/pdenno/TwoDrive/OneDrive/Repo/Loughborough/Writing/Papers/MAPPING/operations-ontology.tex"
    "ops"
-   'onto/Operations))
+   'onto/OperationsDomainConcept))
 
 (defn modi []
   (latex-write-onto!
