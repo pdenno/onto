@@ -1,0 +1,152 @@
+\subsection{Abstract}\\
+Description: Aspect with neither a spatial nor a temporal location. \cite{Pease2011}\\
+\\\\   \textbf{Fidelity}\\Description: the degree to which a Model agrees with reality\\
+\\$ Fidelity \sqsubseteq Abstract$
+\\\\   \textbf{Credibility}\\Description: an expression of confidence in a belief\\
+\\$ Credibility \sqsubseteq Abstract$
+\\\\   \textbf{MeasurementError}\\Description: the difference between a measured value and the 'true value' of the thing being measured [S. Bell]\\
+\\$ MeasurementError \sqsubseteq Abstract$
+\subsubsection{UncertaintySource}\\
+Description: +++Needs Definition+++\\
+\\$ UncertaintySource \sqsubseteq Abstract$
+\\\\   \textbf{ModelPropertyMeasurementUncertainty}\\Description: Uncertainty inherent in the basic random variables \textbf{X}, such as the uncertainty inherent in material property constants and load values, which can be directly measured. \cite{Kiureghian2008}\\
+\\$ ModelPropertyMeasurementUncertainty \sqsubseteq UncertaintySource$
+\\\\   \textbf{ProbabilisticModelFormUncertainty}\\Description: Uncertain model error resulting from selection of the form of the probabilistic sub-model used to describe the distribution of basic variables. \cite{Kiureghian2008}\\
+\\$ ProbabilisticModelFormUncertainty \sqsubseteq UncertaintySource$
+\subsubsection{ModelAbstraction}\\
+Description: A conceptualization of a manufacturing process\\
+\\$ ModelAbstraction \sqsubseteq Abstract$
+\\\\   \textbf{Symbol}\\Description: A representation of a ModelProperty\\
+\\$ Symbol \sqsubseteq ModelAbstraction$
+\\$\: Symbol\: \textbf{representsProperty}\: ModelProperty\: [:asymmetric :irreflexive]$
+\\\\   \textbf{ModelDomainViewpoint}\\Description: +++Needs Definition+++\\
+\\$ ModelDomainViewpoint \sqsubseteq ModelAbstraction$
+\paragraph{Equation}\\
+Description: Function describing the relation between ModelProperties\\
+\\$ Equation \sqsubseteq ModelAbstraction$
+\\$\: Model\: \textbf{referencesEquation}\: Equation\:  [:asymmetric :irreflexive]$
+\\\\   \textbf{RegressionEquation}\\Description: Equation derived from observations\\
+\\$ RegressionEquation \sqsubseteq Equation$
+\\\\   \textbf{ObjectiveFunction}\\Description: The function that describes the objective to be accomplished\\
+\\$ ObjectiveFunction \sqsubseteq Equation$
+\\$\: ObjectiveFunction\: \textbf{hasObjective}\: Objective\: []$
+\\\\   \textbf{PhysicalEquation}\\Description: Equations based on physics concepts with consistent dimensionality\\
+\\$ PhysicalEquation \sqsubseteq Equation$
+\paragraph{ModelProperty}\\
+Description: A property describing some aspect of a model. NOTE: It may be denoted in a mathematical relation by a Symbol.\\
+\\$ ModelProperty \sqsubseteq ModelAbstraction$
+\\$\: Model\: \textbf{referencesProperty}\: ModelProperty\:  [:asymmetric :irreflexive]$
+\\$\: Symbol\: \textbf{representsProperty}\: ModelProperty\:  [:asymmetric :irreflexive]$
+\\\\   \textbf{BasicVariable}\\Description: a Variable that corresponds to a Property that can be directly measured. Note: an individual may be both a BasicVariable and a RandomVariable.\\
+\\$ BasicVariable \sqsubseteq ModelProperty$
+\\\\   \textbf{ModelParameter}\\Description: a ModelProperty whose value can be specified so as to specify a context of the analysis.\\
+\\$ ModelParameter \sqsubseteq ModelProperty$
+\\\\   \textbf{DerivedVariable}\\Description: a Variable that corresponds to a Property that cannot be directly measured, but is known only through its relationship with other Variables.\\
+\\$ DerivedVariable \sqsubseteq ModelProperty$
+\subparagraph{CausalViewpointVariable}\\
+Description: +++Needs Definition+++\\
+\\$ CausalViewpointVariable \sqsubseteq ModelProperty$
+\\\\   \textbf{InfluencedVariable}\\Description: a Variable whose value is interpreted as an effect of a causal relationship described by the model\\
+\\$ InfluencedVariable \sqsubseteq CausalViewpointVariable$
+\\\\   \textbf{DefinedVariable}\\Description: a CausalViewpointVariable that is provided a definition as a function of other CausalViewpointVariables.\\
+\\$ DefinedVariable \sqsubseteq CausalViewpointVariable$
+\\\\   \textbf{ControlledVariable}\\Description: a variable that, in the context of the analysis, can be set. AKA a design variable.\\
+\\$ ControlledVariable \sqsubseteq CausalViewpointVariable$
+\\\\   \textbf{PerformanceVariable}\\Description: a ModelProerty the value of which can decide whether a system requirement is met.\\
+\\$ PerformanceVariable \sqsubseteq CausalViewpointVariable$
+\\\\   \textbf{NonControlledVariable}\\Description: a variable in a causal relationship for which intervention is impossible.\\
+\\$ NonControlledVariable \sqsubseteq CausalViewpointVariable$
+\paragraph{Model}\\
+Description: an abstraction expressed formally to aid in planning or investigating\\
+\\$ Model \sqsubseteq ModelAbstraction$
+\\$\: Model\: \textbf{referencesEquation}\: Equation\: [:asymmetric :irreflexive]$
+\\$\: Model\: \textbf{referencesProperty}\: ModelProperty\: [:asymmetric :irreflexive]$
+\subparagraph{SubscriptiveModel}\\
+Description: a Model that describes intent.\\
+\\$ SubscriptiveModel \sqsubseteq Model$
+\\\\   \textbf{ProcessPlan}\\Description: +++Needs Definition+++\\
+\\$ ProcessPlan \sqsubseteq SubscriptiveModel$
+\\\\   \textbf{CADModel}\\Description: +++Needs Definition+++\\
+\\$ CADModel \sqsubseteq SubscriptiveModel$
+\subparagraph{PredictiveModel}\\
+Description: a Model that, given a set of initial circumstances, describes likely outcomes\\
+\\$ PredictiveModel \sqsubseteq Model$
+\\\\   \textbf{AnalyticalModel}\\Description: a Model that relates BasicVariables to DerivedVariables.\\
+\\$ AnalyticalModel \sqsubseteq PredictiveModel$
+{NumericalModel}\\
+Description: a Model that encodes an AnalyticalModel or ProbabilisticModel for the purpose of simulation or computation of DerivedVariables.\\
+\\$ NumericalModel \sqsubseteq PredictiveModel$
+\\\\   \textbf{FEAModel}\\Description: a NumericalModel that applies the finite element method.\\
+\\$ FEAModel \sqsubseteq NumericalModel$
+\subparagraph{ProbabilisticModel}\\
+Description: +++Needs Definition+++\\
+\\$ ProbabilisticModel \sqsubseteq Model$
+\\\\   \textbf{DiscreteEventSimulation}\\Description: a Monte Carlo simulation that describes the probable state of a system by simulating the consequences of a probabilistic occurrence of events\\
+\\$ DiscreteEventSimulation \sqsubseteq ProbabilisticModel$
+\paragraph{Function}\\
+Description: +++Needs Definition+++\\
+\\$ Function \sqsubseteq ModelAbstraction$
+\\\\   \textbf{RandomVariable}\\Description: a measurable function over a probability space (i.e. outcomes). Note: typically a random variable is used to enable specification and sampling of a probability distribution associated with the probability space.\\
+\\$ RandomVariable \sqsubseteq Function$
+\subsubsection{ModelingConcept}\\
+Description: +++Needs Definition+++\\
+\\$ ModelingConcept \sqsubseteq Abstract$
+\\\\   \textbf{RangeDeclaration}\\Description: +++Needs Definition+++\\
+\\$ RangeDeclaration \sqsubseteq ModelingConcept$
+\\\\   \textbf{DomainDeclaration}\\Description: +++Needs Definition+++\\
+\\$ DomainDeclaration \sqsubseteq ModelingConcept$
+\\\\   \textbf{TypeDeclaration}\\Description: +++Needs Definition+++\\
+\\$ TypeDeclaration \sqsubseteq ModelingConcept$
+\\\\   \textbf{Parameter}\\Description: +++Needs Definition+++\\
+\\$ Parameter \sqsubseteq ModelingConcept$
+\\\\   \textbf{SubtypeRelation}\\Description: +++Needs Definition+++\\
+\\$ SubtypeRelation \sqsubseteq ModelingConcept$
+\\\\   \textbf{PropertyDeclaration}\\Description: +++Needs Definition+++\\
+\\$ PropertyDeclaration \sqsubseteq ModelingConcept$
+\\\\   \textbf{Cardinality}\\Description: +++Needs Definition+++\\
+\\$ Cardinality \sqsubseteq ModelingConcept$
+\paragraph{Proposition}\\
+Description: Abstract entities that express a complete thought or a set of such thoughts.  As an example, the formula '(instance Yojo Cat)' expresses the Proposition that the entity named Yojo is an element of the Class of Cats.  Note that propositions are not restricted to the content expressed by individual sentences of a Language.  They may encompass the content expressed by theories, books, and even whole libraries.  It is important to distinguish Propositions from the ContentBearingObjects that express them.  A Proposition is a piece of information, e.g. that the cat is on the mat, but a ContentBearingObject is an Object that represents this information. A Proposition is an abstraction that may have multiple representations: strings, sounds, icons, etc.  For example, the Proposition that the cat is on the mat is represented here as a string of graphical characters displayed on a monitor and/or printed on paper, but it can be represented by a sequence of sounds or by some non-latin alphabet or by some cryptographic form" \cite{Pease2011}\\
+\\$ Proposition \sqsubseteq ModelingConcept$
+\\\\   \textbf{Objective}\\Description: a Proposition expressing an optative propositional attitude.\\
+\\$ Objective \sqsubseteq Proposition$
+\\$\: ObjectiveFunction\: \textbf{hasObjective}\: Objective\:  []$
+\subsubsection{Uncertainty}\\
+Description: the quantification of doubt about a measurement. \cite{Bell2001}\\
+\\$ Uncertainty \sqsubseteq Abstract$
+\\\\   \textbf{AleatoryUncertainty}\\Description: Uncertainty that, within the context of the modeling universe, cannot be reduced by gathering more data or by refining models. \cite{Kiureghian2008}\\
+\\$ AleatoryUncertainty \sqsubseteq Uncertainty$
+\\\\   \textbf{PropertyMeasurementUncertainty}\\Description: Uncertainty inherent in the basic random variables, such as the uncertainty inherent in material property constants and load values, which can be directly measured. \cite{Kiureghian2008}\\
+\\$ PropertyMeasurementUncertainty \sqsubseteq Uncertainty$
+\\\\   \textbf{ModelUncertainty}\\Description: +++Needs Definition+++\\
+\\$ ModelUncertainty \sqsubseteq Uncertainty$
+\\\\   \textbf{StatisticalUncertaintyOfModelParameters}\\Description: Statistical uncertainty in the estimation of the parameters of the probabilistic sub-model. Note: Der Kuireghian types 4 and 5. \cite{Kiureghian2008}\\
+\\$ StatisticalUncertaintyOfModelParameters \sqsubseteq Uncertainty$
+\\\\   \textbf{ParameterMeasurementUncertainty}\\Description: Uncertain errors involved in measuring of observations, based on which the parameters [of physical and probabilistic models] are estimated. These include errors involved in indirect measurement, e.g., the measurement of a quantity through a proxy, as in non-destructive testing of material strength. \cite{Kiureghian2008}\\
+\\$ ParameterMeasurementUncertainty \sqsubseteq Uncertainty$
+\paragraph{EpistemicUncertainty}\\
+Description: Uncertainty that, within the context of the modeling universe, can be reduced by gathering more data or by refining models. \cite{Kiureghian2008}\\
+\\$ EpistemicUncertainty \sqsubseteq Uncertainty$
+\\\\   \textbf{ComputationalUncertainty}\\Description: Uncertainty modeled by the random variables Y corresponding to the derived variables y, which may include, in addition to all the above uncertainties, uncertain errors resulting from computational errors, numerical approximations or truncations. For example, the computation of load effects in a nonlinear structure by a finite element procedure employs iterative calculations, which invariably involve convergence tolerances and truncation errors. [Der Kiureghian]\\
+\\$ ComputationalUncertainty \sqsubseteq EpistemicUncertainty$
+\\\\   \textbf{ModelFormUncertainty}\\Description: +++Needs Definition+++\\
+\\$ ModelFormUncertainty \sqsubseteq EpistemicUncertainty$
+\subsection{Physical}\\
+Description: Aspect that has a spatial or temporal location \cite{Pease2011}\\
+\\\\   \textbf{EditingNotes}\\Description: +++Needs Definition+++\\
+\\$ EditingNotes \sqsubseteq Physical$
+\\\\   \textbf{Cost}\\Description: +++Needs Definition+++\\
+\\$ Cost \sqsubseteq Physical$
+\subsubsection{Object}\\
+Description: "Corresponds roughly to the class of ordinary objects.  Examples include normal physical objects, geographical regions, and locations of Processes, the complement of Objects in the Physical class.  In a 4D ontology, an Object is something whose spatiotemporal extent is thought of as dividing into spatial parts roughly parallel to the time-axis.\cite{Pease2011}\\
+\\$ Object \sqsubseteq Physical$
+\\\\   \textbf{Resource}\\Description: Physical things necessary for the production of a Part\\
+\\$ Resource \sqsubseteq Object$
+\\$\: Resource\: \textbf{hasCost}\: \: []$
+\subsubsection{Process}\\
+Description: "The class of things that happen and have temporal parts or stages.  Examples include extended events like a football match or a race, actions like Pursuing and Reading, and biological processes. The formal definition is: anything that occurs in time but is not an Object.  Note that a Process may have participants 'inside' it which are Objects, such as the players in a football match.  In a 4D ontology, a Process is something whose spatiotemporal extent is thought of as dividing into temporal stages roughly perpendicular to the time-axis." \cite{Pease2011}\\
+\\$ Process \sqsubseteq Physical$
+\\\\   \textbf{ProcessOccurrence}\\Description: Description of the manufacturing taking place to produce the finished part\\
+\\$ ProcessOccurrence \sqsubseteq Process$
+\\\\   \textbf{Labor}\\Description: +++Needs Definition+++\\
+\\$ Labor \sqsubseteq Process$

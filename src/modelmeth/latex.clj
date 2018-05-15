@@ -1,7 +1,7 @@
 (ns modelmeth.latex
   "Latex rendering" 
   (:require [clojure.pprint :refer (cl-format pprint)]
-            [modelmeth.util :as util :refer (ppprint ppp)]
+            [modelmeth.util :as util :refer (ppprint ppp with-onto)]
             [clojure.zip :as zip]
             [tawny.owl :as owl]
             [tawny.query :as query]
@@ -23,6 +23,11 @@
     OWLObjectPropertyExpression
     OWLNamedObject OWLOntologyID)
    [org.semanticweb.owlapi.search EntitySearcher]))
+
+(defn aliases [] ; POD temporary
+  (alias 'core  'modelmeth.core))
+
+(def ^:private diag (atom nil))
                         
 (defn zip-depth
   "Return the depth of the location."
@@ -41,7 +46,7 @@
   (loop [loc (-> onto-vec zip/vector-zip zip/down)]
     (as-> loc ?loc
       (if (var? (zip/node ?loc))
-        (zip/edit ?loc #(-> (util/thing-map (var-get %) property-map) ; POD why dec below?
+        (zip/edit ?loc #(-> (util/thing-map % property-map) ; POD why dec below?
                             (assoc :depth (dec (+ (:section-offset @util/+params+)
                                                   (zip-depth ?loc))))))
         ?loc)
@@ -67,8 +72,9 @@
 (defn write-subclasses
   "Write text describing subtyping relationships."
   [tmap]
+  (reset! diag {:subclasses-tmap tmap})
   (let [sname (:short-name tmap)
-        stypes (:subclass-of tmap)]
+        stypes (sort (:subclass-of tmap))]
     (doall
      (map #(println (cl-format nil "\\\\$ ~A \\sqsubseteq ~A$" %1 %2))
           (repeat (count stypes) sname)
@@ -92,7 +98,9 @@
                                   (util/short-name (:obj rel))
                                   sname
                                   (:characteristics rel)))))
-          (:properties tmap)))
+          (sort #(compare (->> %1 :var meta :name)
+                          (->> %2 :var meta :name))
+                (:properties tmap))))
     #_(println "\\\\")))
 
 (defn write-concept
@@ -180,7 +188,7 @@
         prop-vars
         (filter #(or (instance? OWLDataProperty (var-get %))
                      (instance? OWLObjectProperty (var-get %)))
-                (vals (ns-interns (:onto-namespace @util/+params+))))]
+                (vals (ns-interns *ns*)))]
     (reduce (fn [prop-map var] ; Key var already exists. I use sname to find it. 
               (let [obj (var-get var)]
                 (-> prop-map
@@ -194,12 +202,12 @@
             {} prop-vars)))
                     
 (defn latex-write-onto!
-  [out-file ns & root-concepts] ; This interns vars, including root-concepts.
+  [out-file & root-concepts] ; This interns vars, including root-concepts.
   (with-open [wrtr (writer out-file)]
-    (binding [*out* wrtr *ns* ns]
+    (binding [*out* wrtr]
       (let [property-map (property-analysis)]
         (doall (map (fn [root-sym] ; e.g. onto/OperationsDomainConcept
-                      (let [pc-map (util/onto-parent-child-map (var-get (resolve root-sym)))]
+                      (let [pc-map (util/onto-parent-child-map root-sym)]
                         (-> (util/onto-root-map {} [[(resolve root-sym)]] pc-map) 
                             util/vectify 
                             (latex-write-onto-nodes! property-map))))

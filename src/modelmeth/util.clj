@@ -15,12 +15,16 @@
     OWLObject
     OWLOntologyManager OWLOntology IRI
     OWLClassExpression OWLClass OWLAnnotation
-    OWLDataProperty OWLObjectProperty
+    OWLProperty OWLDataProperty OWLObjectProperty
     OWLDataPropertyExpression ; not useful?
     OWLIndividual OWLDatatype
     OWLObjectPropertyExpression
     OWLNamedObject OWLOntologyID)
    [org.semanticweb.owlapi.search EntitySearcher]))
+
+(defmacro with-onto [okey & body]
+  `(binding [*ns* (-> ~okey name symbol find-ns)]
+     ~@body))
 
 (defn aliases [] ; POD temporary
   (alias 'core  'modelmeth.core)
@@ -34,7 +38,6 @@
 (def ^:private diag (atom nil))
 
 (def +params+ (atom {:section-offset 1}))
-                     
 
 (def tawny-types [:tawny.owl/class :tawny.owl/individual :tawny.owl/property
                   :tawny.owl/object-property :tawny.owl/data-property])
@@ -44,9 +47,9 @@
   (list :iri "http://modelmeth.nist.gov/modeling#clojureCode"))
 
 (defn read-onto
-  [onto iri]
-  (rowl/read :iri iri
-             :namespace (create-ns (:onto-namespace @+params+)) 
+  [onto]
+  (rowl/read :iri (:iri onto)
+             :namespace (:ns onto)
              :location (-> onto :location clojure.java.io/file)))
 
 (defn simplify-tawny-annotations
@@ -78,20 +81,47 @@
                           (some #(= sname %) (:ranges  pm))))
              (vals property-map))))
 
+(defn- thing-map-dispatch
+  [obj property-map]
+  (cond
+    (instance? OWLClass    obj) :OWLClass
+    (instance? OWLProperty obj) :OWLProperty
+    :else (type obj)))
+
+(defmulti thing-map-aux #'thing-map-dispatch)
+
+(defmethod thing-map-aux
+  clojure.lang.Var
+  [obj property]
+  (thing-map-aux (var-get obj) property))
+
+(defmethod thing-map-aux
+  clojure.lang.Symbol
+  [obj property]
+  (thing-map-aux (-> obj resolve var-get) property))
+
+;;; Return a map of information about the class. See also query/into-map-with.
+(defmethod thing-map-aux
+  :OWLClass
+  [obj property-map]
+  (let [sname (short-name obj)]
+    (as-> (apply hash-map (tawny.render/as-form obj :keyword true)) ?map
+      (assoc ?map :short-name sname) ; POD (or label)
+      (assoc ?map :var obj) ; <=======================================================================================
+      (assoc ?map :notes (simplify-tawny-annotations (:annotation ?map)))
+      (assoc ?map :subclass-of (doall (map short-name ; POD there are other ways. See notes 2017-07-22. 
+                                           (filter #(instance? OWLClass %)
+                                                   (owl/direct-superclasses obj)))))
+      (assoc ?map :properties (properties-of ?map property-map)))))
+
+(defmethod thing-map-aux
+  :OWLProperty
+  [obj property-map]
+  :NYI)
+
 (defn thing-map
-  "Return a map of information about the class. See also query/into-map-with"
-  ([obj] (thing-map obj {})) ; Used by ignore? 
-  ([obj property-map]
-   (when (instance? OWLClass obj)
-     (let [sname (short-name obj)]
-       (as-> (apply hash-map (tawny.render/as-form obj :keyword true)) ?map
-         (assoc ?map :short-name sname) ; POD (or label)
-         (assoc ?map :var (intern (:onto-namespace @+params+) (symbol sname)))
-         (assoc ?map :notes (simplify-tawny-annotations (:annotation ?map)))
-         (assoc ?map :subclass-of (doall (map short-name ; POD there are other ways. See notes 2017-07-22. 
-                                              (filter #(instance? OWLClass %)
-                                                      (owl/direct-superclasses obj)))))
-         (assoc ?map :properties (properties-of ?map property-map)))))))
+  ([obj] (thing-map obj {}))
+  ([obj property-map] (thing-map-aux obj property-map)))
 
 (defn clojure-code
   "Return any http://modelmeth.nist.gov/modeling#clojureCode annotation"
@@ -105,6 +135,7 @@
 (defn ignore?
   "Returns true if the tawny thing has a clojure {:priority :ignore}"
   [obj]
+  (reset! diag {:obj obj})
   (if (some #(= (owl/guess-type obj) %) tawny-types)
     (when-let [code (clojure-code obj)]
       (= :ignore (:priority (read-string code))))
@@ -113,17 +144,17 @@
 (defn onto-parent-child-map
   "Define the parent/child relationship as a map."
   [root]
-  (let [obj2var-map
-        (let [ks (remove #(ignore? (var-get %))
-                         (vals (ns-interns (:onto-namespace @+params+))))
-              vs (map var-get ks)]
-          (clojure.set/map-invert (zipmap ks vs))),
+  (let [root-obj (-> root resolve var-get)
+        obj2var-map (let [ks (remove #(ignore? (var-get %))
+                                     (vals (ns-interns (-> (resolve root) meta :ns))))
+                          vs (map var-get ks)]
+                      (clojure.set/map-invert (zipmap ks vs))),
         m (reduce (fn [index node]
                     (assoc index (get obj2var-map node)
                            (map #(get obj2var-map %)
                                 (owl/direct-subclasses node))))
                   {}
-                  (conj (owl/subclasses root) root))]
+                  (conj (owl/subclasses root-obj) root-obj))]
     (as-> m ?map
       (dissoc ?map nil)
       (reduce (fn [m k] (update m k #(vec (filter identity %))))

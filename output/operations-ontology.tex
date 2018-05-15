@@ -1,0 +1,202 @@
+\subsection{OperationsDomainConcept}\\
+Description: a concept whose domain of discourse is production operations. NB this is currently used to collect classes that are part of operations modeling project\\
+\\\\   \textbf{WorkcenterOperation}\\Description: +++Needs Definition+++\\
+\\$ WorkcenterOperation \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{Job}\\Description: work that is performed to produce a product\\
+\\$ Job \sqsubseteq OperationsDomainConcept$
+\\$ Job \sqsubseteq Process$
+\\$\: Job\: \textbf{hasJobType}\: Jobtype\: []$
+\\\\   \textbf{ProductionSystem}\\Description: +++Needs Definition+++\\
+\\$ ProductionSystem \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{Jobtype}\\Description: the production process associated with a class of products.\\
+\\$ Jobtype \sqsubseteq Abstract$
+\\$ Jobtype \sqsubseteq OperationsDomainConcept$
+\\$\: Job\: \textbf{hasJobType}\: Jobtype\:  []$
+\\\\   \textbf{Product}\\Description: an artifact that is an intended result of production.\\
+\\$ Product \sqsubseteq Object$
+\\$ Product \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{ProcessOccurrence}\\Description: Description of the manufacturing taking place to produce the finished part\\
+\\$ ProcessOccurrence \sqsubseteq OperationsDomainConcept$
+\\$ ProcessOccurrence \sqsubseteq Process$
+\\\\   \textbf{ProcessOccurrenceCharacteristic}\\Description: +++Needs Definition+++\\
+\\$ ProcessOccurrenceCharacteristic \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{WorkRequirement}\\Description: the time required to perform the operations performed on the machine\\
+\\$ WorkRequirement \sqsubseteq Abstract$
+\\$ WorkRequirement \sqsubseteq ModelParameter$
+\\$ WorkRequirement \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{WorkInProcess}\\Description: the amount of parts currently being process and waiting in Buffers to be processed\\
+\\$ WorkInProcess \sqsubseteq Object$
+\\$ WorkInProcess \sqsubseteq OperationsDomainConcept$
+\\$ WorkInProcess \sqsubseteq PerformanceVariable$
+\subsubsection{JobCharacteristic}\\
+Description: +++Needs Definition+++\\
+\\$ JobCharacteristic \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{ResidenceTime}\\Description: the amount of time a Job remains in the system\\
+\\$ ResidenceTime \sqsubseteq Abstract$
+\\$ ResidenceTime \sqsubseteq JobCharacteristic$
+\\$ ResidenceTime \sqsubseteq NonControlledVariable$
+\subsubsection{SchedulingObjective}\\
+Description: +++Needs Definition+++\\
+\\$ SchedulingObjective \sqsubseteq Objective$
+\\$ SchedulingObjective \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{InputLevelScheduling}\\Description: a sequencing problem that seeks solutions that do not violate constraints on the rate at which input materials can be provided. \cite{Boysen2009}\\
+\\$ InputLevelScheduling \sqsubseteq Abstract$
+\\$ InputLevelScheduling \sqsubseteq SchedulingObjective$
+\\\\   \textbf{MinspanObjective}\\Description: a SchedulingObjective in which the goal is to complete a given collection of jobs as soon as possible after work on the jobs begins.\\
+\\$ MinspanObjective \sqsubseteq SchedulingObjective$
+\subsubsection{OperationsProblem}\\
+Description: a characterization of an aspect of production operations in which a decision, guidance, or an actionable recommendation is sought.\\
+\\$ OperationsProblem \sqsubseteq Abstract$
+\\$ OperationsProblem \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{AssemblyLineBalancingProblem}\\Description: a problem for which solutions seek to distribute work between workcenters in a line.\\
+\\$ AssemblyLineBalancingProblem \sqsubseteq Abstract$
+\\$ AssemblyLineBalancingProblem \sqsubseteq OperationsProblem$
+\paragraph{ProductionSchedulingProblem}\\
+Description: the problem of deciding what to produce when or in what sequence to produce product. N.B. "what to produce when" can be viewed as the problem of scheduling for inventory management, or scheduling against supply chain constraints -- these problems are typically associated with sales and operations planning (S&OP). In contrast "sequencing" is about efficient use of manufacturing resource. This, and not the S&OP notion of scheduling, is the primary focus of the ontology with respect to production scheduling.\\
+\\$ ProductionSchedulingProblem \sqsubseteq Abstract$
+\\$ ProductionSchedulingProblem \sqsubseteq OperationsProblem$
+\\\\   \textbf{FlowShopScheduling}\\Description: A ProductionSchedulingProblen in which "there are a set of m machines (processors) and a set of n jobs. Each job comprises a set of m operations which must be done on different machines. All jobs have the same processing operation order when passing through the machines. There are no precedence constraints among operations of different jobs. Operations cannot be interrupted and each machine can process only one operation at a time. The problem is to find the job sequences on the machines which minimise the makespan, i.e. the maximum of the completion times of all operations." \cite{Seda2007}\\
+\\$ FlowShopScheduling \sqsubseteq ProductionSchedulingProblem$
+\subparagraph{SequencingProblem}\\
+Description: the problem of deciding in what order to start jobs of various job types in line production.\\
+\\$ SequencingProblem \sqsubseteq Abstract$
+\\$ SequencingProblem \sqsubseteq ProductionSchedulingProblem$
+\\\\   \textbf{MultiModelSequencing}\\Description: +++Needs Definition+++\\
+\\$ MultiModelSequencing \sqsubseteq Abstract$
+\\$ MultiModelSequencing \sqsubseteq SequencingProblem$
+\\\\   \textbf{CyclicalScheduling}\\Description: a sequencing problem for which the solution is expressed as a finite sequence that is intended to be repeated without any intervening scheduluing nor any delay.\\
+\\$ CyclicalScheduling \sqsubseteq Abstract$
+\\$ CyclicalScheduling \sqsubseteq SequencingProblem$
+\\\\   \textbf{MixedModelSequencing}\\Description: a SequencingProblem that "aims at avoiding/minimizing sequence-dependent work overload based on a detailed scheduling which explicitly takes operation times, worker movements, station borders and other operational characteristics of the line into account." \cite{Boysen2009}\\
+\\$ MixedModelSequencing \sqsubseteq Abstract$
+\\$ MixedModelSequencing \sqsubseteq SequencingProblem$
+\subsubsection{ProductionEquipment}\\
+Description: durable resources used in production.\\
+\\$ ProductionEquipment \sqsubseteq Object$
+\\$ ProductionEquipment \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{Machine}\\Description: the principal production equipment of a work center.\\
+\\$ Machine \sqsubseteq Object$
+\\$ Machine \sqsubseteq ProductionEquipment$
+\\$\: Machine\: \textbf{hasBreakdownRate}\: BreakDownRate\: [:functional]$
+\\$\: Machine\: \textbf{hasRepairRate}\: RepairRate\: [:functional]$
+\\$\: Machine\: \textbf{hasWorkCapacity}\: WorkCapacity\: [:functional]$
+\\\\   \textbf{Buffer}\\Description: a queue between machines that accepts parts from the upstream machine and providing parts to the downstream machine.\\
+\\$ Buffer \sqsubseteq Object$
+\\$ Buffer \sqsubseteq ProductionEquipment$
+\\$\: Buffer\: \textbf{hasBufferSize}\: nonNegativeInteger\: [:functional]$
+\subsubsection{ResourceState}\\
+Description: the State of a resource (a node in a finite state machine).\\
+\\$ ResourceState \sqsubseteq OperationsDomainConcept$
+\\$ ResourceState \sqsubseteq Physical$
+\\\\   \textbf{BlockingProbability}\\Description: the probability that a machine cannot continue to be process parts because its downstream buffer is full\\
+\\$ BlockingProbability \sqsubseteq Abstract$
+\\$ BlockingProbability \sqsubseteq NonControlledVariable$
+\\$ BlockingProbability \sqsubseteq ResourceState$
+\\\\   \textbf{StarvationProbability}\\Description: the probability that a machine has stopped processing parts because it does not have a part to process -- its upstream buffer is empty\\
+\\$ StarvationProbability \sqsubseteq Abstract$
+\\$ StarvationProbability \sqsubseteq NonControlledVariable$
+\\$ StarvationProbability \sqsubseteq ResourceState$
+\\\\   \textbf{BreakDownRate}\\Description: the rate (average) at which the machine is switching to non-operational status\\
+\\$ BreakDownRate \sqsubseteq Abstract$
+\\$ BreakDownRate \sqsubseteq ModelParameter$
+\\$ BreakDownRate \sqsubseteq ResourceState$
+\\$\: Machine\: \textbf{hasBreakdownRate}\: BreakDownRate\:  [:functional]$
+\\\\   \textbf{RepairRate}\\Description: the rate (average) at which the machine is brought back to operational status\\
+\\$ RepairRate \sqsubseteq Abstract$
+\\$ RepairRate \sqsubseteq ModelParameter$
+\\$ RepairRate \sqsubseteq ResourceState$
+\\$\: Machine\: \textbf{hasRepairRate}\: RepairRate\:  [:functional]$
+\subsubsection{JobTypeCharacteristic}\\
+Description: a property of a job type.\\
+\\$ JobTypeCharacteristic \sqsubseteq Abstract$
+\\$ JobTypeCharacteristic \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{CycleTime}\\Description: +++Needs Definition+++\\
+\\$ CycleTime \sqsubseteq Abstract$
+\\$ CycleTime \sqsubseteq DefinedVariable$
+\\$ CycleTime \sqsubseteq JobTypeCharacteristic$
+\subsubsection{ResourceProperty}\\
+Description: +++Needs Definition+++\\
+\\$ ResourceProperty \sqsubseteq Abstract$
+\\$ ResourceProperty \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{WorkCapacity}\\Description: the amount of work that the machine can do per unit time. NOTE: the processing time of a JobType on a machine is the JobType's Work Requirement divided by the Machine Work Capacity.\\
+\\$ WorkCapacity \sqsubseteq Abstract$
+\\$ WorkCapacity \sqsubseteq ModelParameter$
+\\$ WorkCapacity \sqsubseteq ResourceProperty$
+\\$\: Machine\: \textbf{hasWorkCapacity}\: WorkCapacity\:  [:functional]$
+\subsubsection{Line}\\
+Description: +++Needs Definition+++\\
+\\$ Line \sqsubseteq Object$
+\\$ Line \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{FeederLine}\\Description: +++Needs Definition+++\\
+\\$ FeederLine \sqsubseteq Line$
+\\$ FeederLine \sqsubseteq Object$
+\\\\   \textbf{AsynchronousLine}\\Description: a line in which the movement of jobs to next workstations is not coordinated; new work may be processed as soon as the workcenter is free and the new work is available. Note: asynchronous operation is enabled by buffers between workcenters.\\
+\\$ AsynchronousLine \sqsubseteq Line$
+\\$ AsynchronousLine \sqsubseteq Object$
+\paragraph{SynchronousLine}\\
+Description: a line in which all work moves between workstations simultaneously. Note: Typically the simultaneous movement is a necessity brought about by the line not having buffers between workstations.\\
+\\$ SynchronousLine \sqsubseteq Line$
+\\$ SynchronousLine \sqsubseteq Object$
+\\\\   \textbf{UnpacedLine}\\Description: a synchronous line in which jobs move to their next workstation only when work at the current workstation is completed.\\
+\\$ UnpacedLine \sqsubseteq Object$
+\\$ UnpacedLine \sqsubseteq SynchronousLine$
+\\\\   \textbf{PacedLine}\\Description: a synchronous line in which jobs move to the next workstation at specified times, regardless of whether or not the work to be performed at the current workstation is complete.\\
+\\$ PacedLine \sqsubseteq Object$
+\\$ PacedLine \sqsubseteq SynchronousLine$
+\subsubsection{SequencingConstraint}\\
+Description: a Constraint used in a SequencingProblem\\
+\\$ SequencingConstraint \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{CarSequencing}\\Description: a sequencing problem similar to mixed model sequencing but with only certain (less restrictive) constraints to be decided, specifically, the maximum number of jobs with a 
+certain option $H_o$ that are to be allowed within $N_o$ sequence positions. \cite{Boysen2009}\\
+\\$ CarSequencing \sqsubseteq Abstract$
+\\$ CarSequencing \sqsubseteq SequencingConstraint$
+\subsubsection{ProcessingTime}\\
+Description: the amount of time required by a part at a workstation.\\
+\\$ ProcessingTime \sqsubseteq Abstract$
+\\$ ProcessingTime \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{DynamicProcessingTime}\\Description: a processing time that may vary with time. Example: varying due to learning effect. \cite{Boysen2008}\\
+\\$ DynamicProcessingTime \sqsubseteq Abstract$
+\\$ DynamicProcessingTime \sqsubseteq ProcessingTime$
+\\\\   \textbf{StochasticProcessingTime}\\Description: a ProcessingTime described by a RandomVariable.\\
+\\$ StochasticProcessingTime \sqsubseteq Abstract$
+\\$ StochasticProcessingTime \sqsubseteq ProcessingTime$
+\\\\   \textbf{DeterministicProcessingTime}\\Description: a ProcessingTime described by a fixed quantity of time.\\
+\\$ DeterministicProcessingTime \sqsubseteq Abstract$
+\\$ DeterministicProcessingTime \sqsubseteq ProcessingTime$
+\\\\   \textbf{PhonyPhysicalSubClass}\\Description: +++Needs Definition+++\\
+\\$ PhonyPhysicalSubClass \sqsubseteq Object$
+\\$ PhonyPhysicalSubClass \sqsubseteq ProcessingTime$
+\subsubsection{LineCharacteristic}\\
+Description: characteristics of a production line. Many of the concepts defined in this area are from \cite{Boysen2008}.\\
+\\$ LineCharacteristic \sqsubseteq Abstract$
+\\$ LineCharacteristic \sqsubseteq OperationsDomainConcept$
+\\\\   \textbf{Throughput}\\Description: the number of finished products produced by the production system per unit time. In this model it is equal to Work in Process divided by Residence Time.\\
+\\$ Throughput \sqsubseteq Abstract$
+\\$ Throughput \sqsubseteq DefinedVariable$
+\\$ Throughput \sqsubseteq LineCharacteristic$
+\\$ Throughput \sqsubseteq PerformanceVariable$
+\paragraph{LineLayout}\\
+Description: the spacial arrangement of workcenters in a production facility\\
+\\$ LineLayout \sqsubseteq LineCharacteristic$
+\\\\   \textbf{UShapedLayout}\\Description: a line layout where workcenters are arranged in a U shape.\\
+\\$ UShapedLayout \sqsubseteq LineLayout$
+\\\\   \textbf{SerialLineLayout}\\Description: a line layout where workcenters are arranged in line\\
+\\$ SerialLineLayout \sqsubseteq LineLayout$
+\paragraph{LineProductionType}\\
+Description: a characterization of the flexibility inherent in a production line with respect to how it processes jobs of one or more types.\\
+\\$ LineProductionType \sqsubseteq Abstract$
+\\$ LineProductionType \sqsubseteq LineCharacteristic$
+\\\\   \textbf{MixedModelProduction}\\Description: production in which the production system produces products of various types in lot sizes of one. \cite{Liao2014}\\
+\\$ MixedModelProduction \sqsubseteq Abstract$
+\\$ MixedModelProduction \sqsubseteq LineProductionType$
+\\\\   \textbf{SingleModelProduction}\\Description: production in which the production system is dedicated to the production of a single product type. \cite{Liao2014}\\
+\\$ SingleModelProduction \sqsubseteq Abstract$
+\\$ SingleModelProduction \sqsubseteq LineProductionType$
+\\\\   \textbf{TransferLineProduction}\\Description: LineProduction in which jobs visit every workstation of a line in line-order. AKA flow line. AKA Production line. \cite{Dallery1992}\\
+\\$ TransferLineProduction \sqsubseteq Abstract$
+\\$ TransferLineProduction \sqsubseteq LineProductionType$
+\\\\   \textbf{FlowShopProduction}\\Description: LineProduction in which jobs visit every workstation of a line in line-order, but the order of processing of the individual jobs can be permutated. AKA permutation sequencing. This is \cite{Bautista2015} "FlowLineProduction"\\
+\\$ FlowShopProduction \sqsubseteq LineProductionType$
+\\\\   \textbf{MultiModelProduction}\\Description: production in which the production system produces batches with intermediate setup operations. \cite{Liao2014}\\
+\\$ MultiModelProduction \sqsubseteq Abstract$
+\\$ MultiModelProduction \sqsubseteq LineProductionType$
