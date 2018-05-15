@@ -1,4 +1,4 @@
-(ns modelmeth.util
+(ns modelmeth.onto.util
   (:require [clojure.pprint :refer (cl-format pprint)]
             [clojure.walk :refer-only (prewalk prewalk-demo)]
             [tawny.owl    :as owl]

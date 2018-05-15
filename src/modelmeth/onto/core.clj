@@ -2,7 +2,7 @@
   "Manipulate OWL ontologies"
   {:author "Peter Denno"}
   (:require [tawny.owl :as owl]
-            [modelmeth.util :as util :refer (with-onto)]
+            [modelmeth.util :as util :refer [with-onto ppp ppprint]]
             [modelmeth.latex :as latex]))
 
 (swap! util/+params+ #(assoc % :onto-namespace 'onto))

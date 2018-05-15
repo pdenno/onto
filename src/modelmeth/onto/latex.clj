@@ -72,7 +72,6 @@
 (defn write-subclasses
   "Write text describing subtyping relationships."
   [tmap]
-  (reset! diag {:subclasses-tmap tmap})
   (let [sname (:short-name tmap)
         stypes (sort (:subclass-of tmap))]
     (doall
